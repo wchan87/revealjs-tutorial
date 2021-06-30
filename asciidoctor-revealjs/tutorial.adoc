@@ -1,0 +1,116 @@
+== Why Streams API?
+
+[%step]
+* Real-time stream processing
+* Stream-like API (map / reduce)
+* Under the hood:
+** Rebalancing
+** Persistent workers' state and replication
+** Easy scaling
+
+== Kafka Streams API application outline
+
+[source,java]
+----
+StreamsConfig config = ...;
+//Here we set various options
+
+Topology topology = new StreamsBuilder()
+//Here we build the topology
+....build();
+----
+
+== Kafka Streams in Action
+[.custom-style]
+[cols="30a,70a"]
+|===
+|image::KSIA.jpeg[]
+|
+* **William Bejeck**, +
+“Kafka Streams in Action”, November 2018
+* Code examples for Kafka 1.x
+|===
+
+[%notitle]
+== Living in Legacy is Hard
+
+image::swampman.jpeg[canvas, size=cover]
+
+== Coding “Bet Totalling App”
+
+What is the total payout when the certain outcome wins?
+
+[graphviz, counting-topology, png]
+-----
+digraph G {
+graph [ dpi = 150 ];
+rankdir="LR";
+node [fontsize=18; shape="circle"; fixedsize="true"; width="1.1"];
+Store [shape="cylinder"; label="Local Store"; fixedsize="true"; width="1.5"]
+Source -> MapVal -> Sum -> Sink
+Sum -> Store [dir=both; label=" \n "]
+{rank = same; Store; Sum;}
+}
+-----
+
+== Non-reproducible build
+[graphviz, unstable-update, png]
+-----
+digraph G {
+  rankdir="LR";
+  graph [ dpi = 150 ];
+
+  u -> r0;
+  u[shape=plaintext; label="linter update\n+ 13 warnings"]
+  r0[shape=point, width = 0]
+  r1 -> r0[ arrowhead = none, label="master branch" ];
+
+  r0-> r2 [];
+  b1 -> b4;
+
+  r1->b1
+  r1[label="150\nwarnings"]
+  b1[label="± 0\nwarnings"]
+
+  b4[label="± 0\nwarnings"]
+  b4->r2
+  r2[label="163\nwarnings", color="red", xlabel=<<font color="red">merge blocked</font>>]
+  {rank = same; u; r0; b4;}
+}
+-----
+
+== Intersection types
+
+[plantuml, intersections, png]
+----
+@startuml
+skinparam dpi 150
+class Employee {
+}
+class Retiree {
+}
+class Person {
+  + getName(): String
+}
+interface Payable {
+  + getMonthPayment: BigDecimal
+}
+Payable <|.. Employee
+Payable <|.. Retiree
+Person <|-- Employee
+Person <|-- Retiree
+Person <|-- Visitor
+@enduml
+----
+
+[source,java]
+----
+public <T extends Person & Payable>
+  String getRandomNameAndPayment(List<T> items) {
+  T result =
+    items.get(
+        ThreadLocalRandom.current().nextInt(items.size()));
+    return result.getName() //from Person!
+         + result.getPayment(); //from Payable!
+}
+----
