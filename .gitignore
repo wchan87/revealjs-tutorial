@@ -1,3 +1,5 @@
 node_modules/
 .asciidoctor/
 .idea/
+.vscode/
+.DS_Store
